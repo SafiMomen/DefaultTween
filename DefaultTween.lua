@@ -20,7 +20,7 @@ local Maid = require("Maid");
 ----- MAIN CLASS -----
 
 return function(source, time, easing, direction) 
-  local sourceObservable = Blend.toPropertyObservable(source) or Rx.of(source);
+  	local sourceObservable = Blend.toPropertyObservable(source) or Rx.of(source);
 
 	local easingStyle = Enum.EasingStyle[easing];
 	local easingDirection = Enum.EasingDirection[direction];
