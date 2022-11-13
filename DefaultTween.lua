@@ -43,6 +43,8 @@ return function(source, time, easing, direction)
 
 		maid:GiveTask(stopAnimate);
 		maid:GiveTask(sourceObservable:Subscribe(function(value)
+			stopAnimate();
+						
 			if (position) then				
 				previousPosition = position;
 			end;
