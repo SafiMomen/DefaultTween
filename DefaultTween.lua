@@ -20,41 +20,45 @@ local Maid = require("Maid");
 ----- MAIN CLASS -----
 
 return function(source, time, easing, direction) 
-  	local sourceObservable = Blend.toPropertyObservable(source) or Rx.of(source);
+      local sourceObservable = Blend.toPropertyObservable(source) or Rx.of(source);
 
-	local easingStyle = Enum.EasingStyle[easing];
-	local easingDirection = Enum.EasingDirection[direction];
+    local easingStyle = Enum.EasingStyle[easing];
+    local easingDirection = Enum.EasingDirection[direction];
 
-	local position = nil;
-	local previousPosition = nil;
+    local position = nil;
+    local previousPosition = nil;
 
-	--TODO: add time, easing, direction as observables.
-	return Observable.new(function(sub)
-		local maid = Maid.new();
+    --TODO: add time, easing, direction as observables.
+    return Observable.new(function(sub)
+        local maid = Maid.new();
 
-		local startAnimate, stopAnimate = StepUtils.bindToRenderStep(function(t)
-			local a = (tick() - t) / time;
-			local p = TweenService:GetValue(a, easingStyle, easingDirection);
-			local posValue = previousPosition + p * (position - previousPosition);
-			sub:Fire(SpringUtils.fromLinearIfNeeded(posValue));
+        local startTime = os.clock()
 
-			return a < 1;
-		end);
+        local startAnimate, stopAnimate = StepUtils.bindToRenderStep(function()
+            local elapsedTime = (os.clock() - startTime)
+            local alpha = elapsedTime / time;
+            local percentAlong = TweenService:GetValue(alpha, easingStyle, easingDirection);
+            local posValue = previousPosition + percentAlong * (position - previousPosition);
+            sub:Fire(SpringUtils.fromLinearIfNeeded(posValue));
 
-		maid:GiveTask(stopAnimate);
-		maid:GiveTask(sourceObservable:Subscribe(function(value)
-			stopAnimate();
-						
-			if (position) then				
-				previousPosition = position;
-			end;
-			position = SpringUtils.toLinearIfNeeded(value);
+            return alpha < 1;
+        end);
 
-			if (position and previousPosition) then				
-				startAnimate(tick());
-			end;
-		end));
+        maid:GiveTask(stopAnimate);
+        maid:GiveTask(sourceObservable:Subscribe(function(value)
+            stopAnimate();
+                        
+            if (position) then                
+                startTime = os.clock()
+                previousPosition = position;
+            end;
+            position = SpringUtils.toLinearIfNeeded(value);
 
-		return maid;
-	end);
+            if (position and previousPosition) then                
+                startAnimate();
+            end;
+        end));
+
+        return maid;
+    end);
 end;
