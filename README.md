@@ -6,6 +6,6 @@ https://github.com/Quenty/NevermoreEngine/tree/main/src/blend
 
 TO-DO:
 - Start tween from interrupted position. [BUG] [DONE]
-- Use default values if not given time, easying style, and easing direction. [BUG]
-- Accept time, easying style, easing direction as observables. [FEATURE]
+- Use default values if not given easing style and easing direction. [BUG] [DONE] 
+- Accept easing style and easing direction as observables. [FEATURE] [DONE] 
 - Accept reverse and repeat count. [FEATURE]
