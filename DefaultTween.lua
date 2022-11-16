@@ -18,23 +18,34 @@ local SpringUtils = require("SpringUtils");
 local Maid = require("Maid");
 
 ----- MAIN CLASS -----
+local DEFAULT_EASE = "Linear";
+local DEFAULT_DIRECTION = "InOut";
+
 return function(source, time, easing, direction) 
 	local sourceObservable = Blend.toPropertyObservable(source) or Rx.of(source);
-
-	local easingStyle = Enum.EasingStyle[easing];
-	local easingDirection = Enum.EasingDirection[direction];
+	local easeingObservable = Blend.toPropertyObservable(easing) or Rx.of(easing);
+	local directionObservable = Blend.toPropertyObservable(direction) or Rx.of(direction);
 
 	local position = nil;
 	local previousPosition = nil;
-	
 	local cachedValue = nil;
-
-	--TODO: add time, easing, direction as observables.
+	
 	return Observable.new(function(sub)
 		local maid = Maid.new();
-
 		local startTime = os.clock()
-
+		
+		-- easing properties
+		local easingStyle = nil;
+		maid:GiveTask(easeingObservable:Subscribe(function(easing)
+			easingStyle = Enum.EasingStyle[easing or DEFAULT_EASE];
+		end));
+		
+		local easingDirection = nil;
+		maid:GiveTask(directionObservable:Subscribe(function(direction)
+			easingDirection = Enum.EasingDirection[direction or DEFAULT_DIRECTION];
+		end));
+		
+		-- animation
 		local startAnimate, stopAnimate = StepUtils.bindToRenderStep(function()
 			local elapsedTime = (os.clock() - startTime)
 			local alpha = elapsedTime / time;
@@ -46,11 +57,10 @@ return function(source, time, easing, direction)
 			
 			return alpha < 1;
 		end);
-
+		
+		-- on position changed
 		maid:GiveTask(stopAnimate);
 		maid:GiveTask(sourceObservable:Subscribe(function(value)
-			stopAnimate();
-
 			if (not cachedValue) then                
 				cachedValue = SpringUtils.toLinearIfNeeded(value);
 			end;
